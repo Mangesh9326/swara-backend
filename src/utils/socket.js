@@ -8,7 +8,7 @@ module.exports = {
   init: (httpServer) => {
     io = new Server(httpServer, {
       cors: {
-        origin: "*", // Update this to your React frontend URL in production
+        origin: "https://themangesh.in", // Update this to your React frontend URL in production
         methods: ["GET", "POST"]
       }
     });
