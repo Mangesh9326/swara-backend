@@ -13,7 +13,7 @@ exports.getUsers = async (req, res) => {
       WHERE u.deleted_at IS NULL
       ORDER BY u.created_at DESC
     `;
-    const { rows } = await pool.query(query);
+    const { rows } = await db.query(query);
     res.status(200).json(rows);
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -24,7 +24,7 @@ exports.getUsers = async (req, res) => {
 // GET: Fetch available roles for the dropdown form
 exports.getRoles = async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT id, name FROM roles WHERE deleted_at IS NULL ORDER BY name');
+    const { rows } = await db.query('SELECT id, name FROM roles WHERE deleted_at IS NULL ORDER BY name');
     res.status(200).json(rows);
   } catch (error) {
     console.error('Error fetching roles:', error);
@@ -49,8 +49,8 @@ exports.createUser = async (req, res) => {
     // Ensure branch is explicitly null if omitted to save DB space
     const finalBranch = branch || null;
 
-    // Fixed bug: Used pool.query instead of undefined db.query
-    const { rows } = await pool.query(insertQuery, [
+    // Fixed bug: Used db.query instead of undefined db.query
+    const { rows } = await db.query(insertQuery, [
       first_name, last_name, email, password_hash, role_id, finalBranch, is_active
     ]);
 
@@ -92,7 +92,7 @@ exports.updateUser = async (req, res) => {
       params = [first_name, last_name, email, role_id, finalBranch, is_active, id];
     }
 
-    await pool.query(query, params);
+    await db.query(query, params);
 
     res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
@@ -114,7 +114,7 @@ exports.deleteUser = async (req, res) => {
     }
 
     const deleteQuery = `UPDATE users SET deleted_at = CURRENT_TIMESTAMP, is_active = false WHERE id = $1`;
-    const { rowCount } = await pool.query(deleteQuery, [id]); // rowCount is faster than checking returned arrays
+    const { rowCount } = await db.query(deleteQuery, [id]); // rowCount is faster than checking returned arrays
 
     if (rowCount === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -124,7 +124,7 @@ exports.deleteUser = async (req, res) => {
     res.status(200).json({ message: 'User deleted successfully' });
 
     // Execute the Activity Log asynchronously in the background (does not block the user response)
-    pool.query(
+    db.query(
       'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, ip_address) VALUES ($1, $2, $3, $4, $5)',
       [req.user.id, 'Deleted User', 'Users', id, req.ip || '0.0.0.0']
     ).catch(err => console.error('Failed background activity log:', err));
