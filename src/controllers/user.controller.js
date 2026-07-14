@@ -1,17 +1,6 @@
 const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
-
-// Optimized Connection Pool
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-  max: 20, // Max concurrent connections (prevents bottlenecking)
-  idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-  connectionTimeoutMillis: 2000, // Fail fast if DB is down
-});
+const db = require('../config/db');
 
 // GET: Fetch all active users (excluding passwords)
 exports.getUsers = async (req, res) => {
